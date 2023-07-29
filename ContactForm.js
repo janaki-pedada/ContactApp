@@ -1,97 +1,118 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import ContactList from './ContactList';
 
-const ContactForm = ({ onCreateContact, onUpdateContact, contactToEdit }) => {
-  const [formData, setFormData] = useState({
-    id: null,
-    firstName: '',
-    lastName: '',
-    phoneNumber: '',
-    email: '',
-  });
-
-  useEffect(() => {
-    if (contactToEdit) {
-      setFormData(contactToEdit);
-    } else {
-      setFormData({
-        id: null,
-        firstName: '',
-        lastName: '',
-        phoneNumber: '',
-        email: '',
-      });
-    }
-  }, [contactToEdit]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
+const ContactForm = () => {
+  const [contacts, setContacts] = useState([]);
+  const [editingIndex, setEditingIndex] = useState(-1);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (formData.id) {
-      onUpdateContact(formData);
-    } else {
-      onCreateContact({ ...formData, id: Date.now() });
+    if (firstName && lastName && phoneNumber && email) {
+      if (editingIndex === -1) {
+        const newContact = {
+          firstName,
+          lastName,
+          phoneNumber,
+          email,
+        };
+        setContacts([...contacts, newContact]);
+      } else {
+        const updatedContacts = [...contacts];
+        updatedContacts[editingIndex] = {
+          firstName,
+          lastName,
+          phoneNumber,
+          email,
+        };
+        setContacts(updatedContacts);
+        setEditingIndex(-1);
+      }
+      setFirstName('');
+      setLastName('');
+      setPhoneNumber('');
+      setEmail('');
     }
   };
 
+  const handleEdit = (index) => {
+    const contactToEdit = contacts[index];
+    setFirstName(contactToEdit.firstName);
+    setLastName(contactToEdit.lastName);
+    setPhoneNumber(contactToEdit.phoneNumber);
+    setEmail(contactToEdit.email);
+    setEditingIndex(index);
+  };
+
+  const handleCancelEdit = () => {
+    setFirstName('');
+    setLastName('');
+    setPhoneNumber('');
+    setEmail('');
+    setEditingIndex(-1);
+  };
+
+  const handleDelete = (index) => {
+    const updatedContacts = [...contacts];
+    updatedContacts.splice(index, 1);
+    setContacts(updatedContacts);
+  };
+
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label htmlFor="firstName">First Name:</label>
-        <input
-          type="text"
-          id="firstName"
-          name="firstName"
-          value={formData.firstName}
-          onChange={handleChange}
-          required
-        />
-      </div>
-      <br/>
-      <div>
-        <label htmlFor="lastName">Last Name:</label>
-        <input
-          type="text"
-          id="lastName"
-          name="lastName"
-          value={formData.lastName}
-          onChange={handleChange}
-          required
-        />
-      </div>
-      <br/>
-      <div>
-        <label htmlFor="phoneNumber">Phone Number:</label>
-        <input
-          type="tel"
-          id="phoneNumber"
-          name="phoneNumber"
-          value={formData.phoneNumber}
-          onChange={handleChange}
-          required
-        />
-      </div>
-      <br/>
-      <div>
-        <label htmlFor="email">Email:</label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-      </div>
-      <br/>
-      <button type="submit">{formData.id ? 'Update Contact' : 'Create Contact'}</button>
-    </form>
+    <div>
+      <h2>Create Contact</h2>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label htmlFor="firstName">First Name:</label>
+          <input
+            type="text"
+            id="firstName"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+          />
+        </div>
+        <div>
+          <label htmlFor="lastName">Last Name:</label>
+          <input
+            type="text"
+            id="lastName"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          />
+        </div>
+        <div>
+          <label htmlFor="phoneNumber">Phone Number:</label>
+          <input
+            type="text"
+            id="phoneNumber"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+          />
+        </div>
+        <div>
+          <label htmlFor="email">Email:</label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <button type="submit">
+          {editingIndex === -1 ? 'Create' : 'Save'}
+        </button>
+        {editingIndex !== -1 && (
+          <button type="button" onClick={handleCancelEdit}>
+            Cancel Edit
+          </button>
+        )}
+      </form>
+
+      <ContactList contacts={contacts} onEdit={handleEdit} onDelete={handleDelete} />
+    </div>
   );
 };
 
